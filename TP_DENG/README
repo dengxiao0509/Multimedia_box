@@ -1,0 +1,212 @@
+---------------
+NOM et PRENOM:
+DENG Xiao
+---------------
+Le HTML(index.html) est dans doc.
+Si vous voulez seulement tester le resulta final, veuillez faire comme ca:
+
+(1)client c++
+sur un terminal,dans le repertoire 'TP_DENG':
+
+SOURCES=media.cpp vedio.cpp photo.cpp film.cpp main12.cpp mediagroupe.cpp multimedia.cpp TCPServer.cpp Socket.cpp
+
+$ make 
+$ ./myprog
+
+sur un autre terminal, dans le repertoire 'TP_DENG':
+$ make -f Makefile-client 
+$ ./client
+
+puis,vous pouvez envoyer des message sur le cote client en forme
+
+command nameofmedia
+ex: searchmedia myphoto_Paris
+-----------------------------
+nameofmedias existants:
+
+myphoto_Pekin
+myphoto_Paris
+myfilm_Tantanic
+myfilm_SuperMan
+myvedio_Telecom
+mylist1   //mediagroup
+mylist2   //mediagroup
+
+commands existant:
+
+searchmedia
+searchgroup
+showall     //show all medias of one type
+play
+
+(2) client javaswing
+pour le server,c'est la meme chose;
+
+pour le client,comme ca:
+sur un autre terminal, dans le repertoire 'TP_DENG':
+
+$cd javaswing
+$javac ActionExample.java Myaction1.java Myaction2.java Myaction3.java Myaction4.java Myaction5.java Myaction6.java Client.java Test.java 
+$cd ..
+$java javaswing.Test
+
+Ensuite,appuyez d'abord sur help-> How to use, puis suivez les instructions pour le tester.
+
+
+
+Plus de detail:
+------------------------------------------------
+etape 1-9 (sans utiliser smart pointer,tous sont finits):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*main_copy.cpp  ---- test les methode de copy class 
+*main_nospt.cpp ---- test la fonction de Mediagroupe (contient une liste d'objets ou herite une liste,en changant le macro CONTIENT_HERIRAT_LIST )
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pour verifier les fonctions des class Media,Photo,Vedio,Film,il faut changer les macros dans le fichier media.h: 
+
+dans media.h:
+
+#define CONTIENT_HERIRAT_LIST 1  
+//1 pour contient une liste,et 0 pour herite une liste 
+
+#define INTRUSIVE_POINTER_USE 0   //fixe
+#define SHARED_POINTER_USE 0    //fixe
+#define IS_WRITESIMPLE 0  //fixe
+
+dans Makefile:
+
+SOURCES= media.cpp vedio.cpp photo.cpp film.cpp mediagroupe.cpp main_nospt.cpp(main_copy.cpp) 
+
+------------------------------------------------------------
+
+Reponse 5e:
+C'est le polymorphism, les methodes doivent etre 'virtual' en c++.
+Ce tableau contient des pointeurs vers ces objets, car ils sont tous crees par new et de type Media*.
+
+Reponse 6e:
+On utiliser 'const' pour eviter le changement de tableau:
+    virtual const int* getTableDuree() const;
+    virtual const int getNbCha() const;
+
+Reponse 7e:
+On peut voir la gestion de memoire(destruction et copie des objets) est correct par les informations affichees par destructeurs.
+Note:le tableau de Film doit etre destruit, donc Film est concerne.
+voir main_copy.cpp.
+
+Reponse 8e:
+Il faut mettre le methode play() virtual, ainsi les instantiations de sous-class vont appeler leurs propres play() grace a polymorphisme.
+
+Reponse 9e:
+Dans java, une liste peut seulement contenir des objets de meme type,mais dans c++ on peut mettre des differents objets herites de la meme class de base en utilisant une liste de pointeurs d'objets, et ca marche grace a polymorphism. 
+------------------------------------------------------------
+
+
+
+
+etape 10-11 (tous utilisent herite une liste et smart pointer):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*main_intrusive.cpp  ---- test intrusive_ptr
+*main_shared.cpp ---- test shared_ptr
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+dans media.h:
+
+#define CONTIENT_HERIRAT_LIST 0 //fixe
+#define INTRUSIVE_POINTER_USE 0  // 1 pour use,0 pour non
+#define SHARED_POINTER_USE 1  //1 pour use,et il faut mettre INTRUSIVE_POINTER_USE a 0 (ne peut pas mettre tous les deux a 1)
+#define IS_WRITESIMPLE 0  //fixe
+
+dans Makefile:
+
+SOURCES= media.cpp vedio.cpp photo.cpp film.cpp mediagroupe.cpp main_shared.cpp(main_intrusive.cpp)
+
+-------------------------------------------------------------
+etape 12~15 (tous utilisent herite une liste et smart pointer intrusif):
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*main12.cpp  ---- test Gestion cohérente des données,serialisation et client/server
+
+multimedia.h multimedia.cpp
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#define CONTIENT_HERIRAT_LIST 0 
+#define INTRUSIVE_POINTER_USE 1  
+#define SHARED_POINTER_USE 0 
+#define IS_WRITESIMPLE 1  //pour tester serialisation 
+
+SOURCES= media.cpp vedio.cpp photo.cpp film.cpp main12.cpp mediagroupe.cpp multimedia.cpp
+
+(a) test les fonctions de multimedia
+dans main12.cpp:
+#define IS_TCPSERVER 0  
+#define IS_SERIALISATION_OUTPUT 0
+#define IS_SERIALISATION_INPUT 0
+#define IS_TESTFONCTION 1
+
+(b)test la serialisation
+
+d'abord write a un fichier :
+
+#define IS_TCPSERVER 0  //0 pour non server
+#define IS_SERIALISATION_OUTPUT 1
+#define IS_SERIALISATION_INPUT 0
+#define IS_TESTFONCTION 0
+ 
+Un fichier "test_map.txt" est cree, qui affiche tous les media dans la base de donnee.
+
+et puis, read depuis un fichier:
+
+#define IS_TCPSERVER 0  
+#define IS_SERIALISATION_OUTPUT 0
+#define IS_SERIALISATION_INPUT 1
+#define IS_TESTFONCTION 0
+
+finalement, client/server:
+#define IS_TCPSERVER 1  
+#define IS_SERIALISATION_OUTPUT 0
+#define IS_SERIALISATION_INPUT 0
+#define IS_TESTFONCTION 0
+
+SOURCES= media.cpp vedio.cpp photo.cpp film.cpp main12.cpp mediagroupe.cpp multimedia.cpp TCPServer.cpp Socket.cpp
+
+les commands possibles sont(dans le map il y a un methode a appeler):
+    mycmdmap["searchmedia"]=&Multimedia::SearchMedia;
+    mycmdmap["searchgroup"]=&Multimedia::SearchMediaGroupe;
+    mycmdmap["showall"]=&Multimedia::PrintMediatoclient;
+    mycmdmap["play"]=&Multimedia::PlayMediatoclient;
+
+ex:
+searchmedia myphoto_Paris //afficher une media 
+searchgroup mylist1 //afficher une liste de media d'un mediagroupe
+showall Photo //afficher une liste de tous les medias de type Photo
+play myphoto_Paris //play un media
+
+----------------------------------------------------------------
+Remarque:
+Je n'ai pas fait que le traitement pour les noms des objets contiennent des espace et les methodes pour serialiser la table des groupes dans les questions additionnelles de ces etapes. 
+
+Pour etape 15, j'ai deja traite des erreurs dans le code precedent.
+
+-----------------------------------------------------------------
+
+JAVA SWING:
+
+D'abord appuyer sur help -> how to use, apres vous pouvez essayer tous les buttons en suivant les instructions.
+
+ActionExample.java : Construire l'interface graphique.
+Client.java: class de client.
+Myaction1.java : definition d'un action qui sert a search media.
+Myaction2.java : definition d'un action qui sert a search media group.
+Myaction3.java : definition d'un action qui sert a exit;
+Myaction4.java : definition d'un action qui sert a lister tous les medias d'un meme type;
+Myaction5.java : definition d'un action qui sert a play media;
+Myaction6.java : definition d'un action qui sert a help;
+Test.java : sert a tester (inclus main).
+
+Note: J'ai utilise Action(AbstractAction) et ActionListener.
+
+
+
+
+
